@@ -2,11 +2,12 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
-std::vector <std::pair<Car, int>> create_table(int);
+std::vector <std::pair<char*, int>> create_table(int);
 int find_fib(int);
 int fib(int n);
-std::pair <Car, int> fib_search(int, char *);
+std::pair <char*, int> fib_search(int, char *);
 bool compareChar(char *first, char *second);
 bool equalChar(char *first, char *second);
 Car read_bin(int);
@@ -19,15 +20,19 @@ int main() {
     char* num = new char[7];
     std::cin >> num;
 
-    std::pair <Car, int> res = fib_search(val, num);
-    std::cout << res.first.number << ' ' << res.first.mark << ' ' << res.first.info << ' ' << res.second << '\n';
+    std::pair <char *, int> res = fib_search(val, num);
+    std::cout << res.first << ' ' << res.second << '\n';
     Car new_car =  read_bin(res.second);
-    std::cout << "new_Car: " << new_car.number << ' ' << new_car.mark << ' ' << new_car.info << '\n';
+    std::cout << "Car: " << new_car.number << ' ' << new_car.mark << ' ' << new_car.info << '\n';
+    delete[] new_car.number;
+    delete[] new_car.mark;
+    delete[] new_car.info;
+    delete[] res.first;
     return 0;
 }
 
-std::vector <std::pair<Car, int>> create_table(int value) { // read data and sort
-    std::vector<std::pair<Car, int>> storage;
+std::vector <std::pair<char*, int>> create_table(int value) { // read data and sort
+    std::vector<std::pair<char*, int>> storage;
     storage.resize(value);
     std::ifstream fin("car.bin", std::ios::binary);
     int cur = 0, last = 0;
@@ -47,15 +52,19 @@ std::vector <std::pair<Car, int>> create_table(int value) { // read data and sor
         fin.read((char *)tmp.mark, tmp.mark_val);
         fin.read((char *)tmp.info, tmp.info_val);
         cur += last;
-        storage[i] = {tmp, cur};
+        storage[i] = {tmp.number, cur};
+        
+        // delete[] tmp.number;
+        delete[] tmp.mark;
+        delete[] tmp.info;
         
         last = tmp.number_val + tmp.mark_val + tmp.info_val + 3 * sizeof(int);
     }
 
     for (int i = 0; i < value; ++i) {
         for (int j = i + 1; j < value; ++j) {
-            if (compareChar(storage[i].first.number, storage[j].first.number)) {
-                std::pair <Car, int> tmp = storage[i];
+            if (compareChar(storage[i].first, storage[j].first)) {
+                std::pair <char*, int> tmp = storage[i];
                 storage[i] = storage[j];
                 storage[j] = tmp;
             }
@@ -103,16 +112,20 @@ int fib(int n) { // simple fibbonacci's values
     return fib[n - 1];
 }
 
-std::pair <Car, int> fib_search(int value, char* number) { // search of fibonacci
-    std::vector<std::pair<Car, int>> data = create_table(value);
+std::pair <char*, int> fib_search(int value, char* number) { // search of fibonacci
+    // 100 - 1
+    // 1000 - 4
+    // 10000 - 6
+    std::vector<std::pair<char *, int>> data = create_table(value);
     int k = find_fib(value);
     int m = fib(k + 1) - (value + 1);
     int index = fib(k) - m;
     int p = fib(k - 1);
     int q = fib(k - 2);
     bool flag = true;
-    std::pair <Car, int> res = {Car(), 0};
+    std::pair <char*, int> res = {nullptr, 0};
     
+    auto start = std::chrono::high_resolution_clock::now();
     while (flag) {
         if (index < 0) {
             if (q == 0) flag = false;
@@ -130,19 +143,19 @@ std::pair <Car, int> fib_search(int value, char* number) { // search of fibonacc
                 q = tmp - q;
             }
         }
-        if(flag && index >= 0 && index < value && equalChar(number, data[index].first.number)) {
+        if(flag && index >= 0 && index < value && equalChar(number, data[index].first)) {
             res = data[index];
             flag = false;
         }
 
-        if (flag && index >= 0 && index < value && compareChar(number, data[index].first.number) ) {
+        if (flag && index >= 0 && index < value && compareChar(number, data[index].first) ) {
             if (q == 0) flag = false;
             else {
                 index += q;
                 p = p - q;
                 q = q - p;
             }
-        } else if (flag && index >= 0 && index < value && !compareChar(number, data[index].first.number)) { 
+        } else if (flag && index >= 0 && index < value && !compareChar(number, data[index].first)) { 
             if (p == 0) flag = false; 
             else {
                 index -= q;
@@ -151,10 +164,16 @@ std::pair <Car, int> fib_search(int value, char* number) { // search of fibonacc
                 q = tmp - q;
             }
         }
-        if(flag && index >= 0 && index < value && equalChar(number, data[index].first.number)) {
+        if(flag && index >= 0 && index < value && equalChar(number, data[index].first)) {
             res = data[index];
             flag = false;
         }
+    }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << " time: " << duration.count() << '\n';
+    for (int i = 0; i < data.size(); ++i) {
+        if (i != index) delete[] data[i].first;
     }
     return res;
 }
@@ -166,12 +185,15 @@ Car read_bin(int value) {
     fin.read((char *) &result.number_val, sizeof(int));
     fin.read((char *) &result.mark_val, sizeof(int));
     fin.read((char *) &result.info_val, sizeof(int));
+
     result.number = new char[result.number_val];
     result.mark = new char[result.mark_val];
     result.info = new char[result.info_val];
+
     fin.read((char *) result.number, result.number_val);
     fin.read((char *) result.mark, result.mark_val);
     fin.read((char *) result.info, result.info_val);
+
     fin.close();
     return result;
 }
