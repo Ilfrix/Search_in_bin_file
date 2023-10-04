@@ -54,7 +54,6 @@ std::vector <std::pair<char*, int>> create_table(int value) { // read data and s
         cur += last;
         storage[i] = {tmp.number, cur};
         
-        // delete[] tmp.number;
         delete[] tmp.mark;
         delete[] tmp.info;
         
@@ -113,9 +112,6 @@ int fib(int n) { // simple fibbonacci's values
 }
 
 std::pair <char*, int> fib_search(int value, char* number) { // search of fibonacci
-    // 100 - 1
-    // 1000 - 4
-    // 10000 - 6
     std::vector<std::pair<char *, int>> data = create_table(value);
     int k = find_fib(value);
     int m = fib(k + 1) - (value + 1);

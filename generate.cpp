@@ -57,7 +57,6 @@ void input(int value) {
             fout.write((char *) info, info_val);
             file_out << number_val << ' ' << mark_val << ' ' << info_val << '\t' << name_car << ' ' << mark << ' ' << info << '\n';
         }
-        //delete[] name_car;
     }
     fout.close();
     file_out.close();

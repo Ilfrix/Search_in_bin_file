@@ -19,9 +19,6 @@ int main() {
 }
 
 Car find_linear(std::string num, int value) {
-    // 100 - 997
-    // 1000 - 3007
-    // 10000 - 13012
     std::ifstream fin("car.bin", std::ios::binary);
     Car search[value];
     
@@ -43,7 +40,6 @@ Car find_linear(std::string num, int value) {
         fin.read((char *)tmp.mark, tmp.mark_val);
         fin.read((char *)tmp.info, tmp.info_val);
         search[i] = tmp;
-        // std::cout << tmp.number_val << ' ' << tmp.mark_val << ' ' << tmp.info_val << '\t' << tmp.number << ' ' << tmp.mark << ' ' << tmp.info << '\n';
         if (search[i].number == num) {
             flag = false;
             index = i;
